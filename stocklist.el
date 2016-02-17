@@ -44,14 +44,20 @@
   :type '(repeat string)
   :group 'stocklist)
 
+;; TODO: generate the defstruct based on the code somehow?
+(defcustom stocklist-query-code-yahoo "nsbaryde"
+  "Query code for Yahoo API."
+  :type 'string
+  :group 'stocklist)
+
 (defun stocklist-get-data-yahoo (stocks)
   "Retrieve the raw data for the STOCKS.
 
 STOCKS is a list of strings where each string is a ticker
 symbol."
   (with-current-buffer (url-retrieve-synchronously
-                        (format "http://finance.yahoo.com/d/quotes.csv?s=%s&f=nsbaryde"
-                                (s-join "+" stocks)))
+                        (format "http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s"
+                                (s-join "+" stocks) stocklist-query-code-yahoo))
     (goto-char (point-min))
     (when (search-forward "\n\n" nil t)
       (s-trim (buffer-substring (point) (point-max))))))
