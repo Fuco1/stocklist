@@ -101,7 +101,7 @@ symbol."
           (-each fields
             (lambda (field)
               (insert (funcall (intern (concat "stocklist-instrument-" (symbol-name field))) row) " | ")))))
-      (org-mode)
+      (stocklist-mode)
       (org-table-align)
       (current-buffer))))
 
@@ -112,6 +112,21 @@ symbol."
          (processed-data (stocklist-parse-data-yahoo raw-data))
          (export-buffer (stocklist-export-to-org-table processed-data)))
     (pop-to-buffer export-buffer)))
+
+(defun stocklist-revert ()
+  "Revert stocklist."
+  (interactive)
+  (stocklist-show))
+
+(defvar stocklist-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map org-mode-map)
+    (define-key map "g" 'stocklist-revert)
+    map))
+
+(define-derived-mode stocklist-mode org-mode "Stocklist"
+  "Stocklist mode."
+  (use-local-map stocklist-mode-map))
 
 (provide 'stocklist)
 ;;; stocklist.el ends here
