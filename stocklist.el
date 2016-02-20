@@ -113,11 +113,13 @@ symbol."
          (export-buffer (stocklist-export-to-org-table processed-data)))
     (pop-to-buffer export-buffer)))
 
+;; TODO: add automatic reverting
 (defun stocklist-revert ()
   "Revert stocklist."
   (interactive)
   (stocklist-show))
 
+;; TODO: add persistent ordering between reloads
 (defvar stocklist-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map org-mode-map)
