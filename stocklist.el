@@ -124,6 +124,7 @@ symbol."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map org-mode-map)
     (define-key map "g" 'stocklist-revert)
+    (define-key map "s" 'org-table-sort-lines)
     map))
 
 (define-derived-mode stocklist-mode org-mode "Stocklist"
