@@ -62,6 +62,7 @@ symbol."
     (when (search-forward "\n\n" nil t)
       (s-trim (buffer-substring (point) (point-max))))))
 
+;; TODO: add alerts on the values
 (cl-defstruct stocklist-instrument name symbol bid ask pe yield dps eps payout)
 
 (defun stocklist-parse-data-yahoo (data)
@@ -105,19 +106,43 @@ symbol."
       (org-table-align)
       (current-buffer))))
 
-(defun stocklist-show ()
-  "Show formatted data for tracked stocks."
-  (interactive)
+(defun stocklist-get-buffer ()
+  "Get buffer with updated data."
   (let* ((raw-data (stocklist-get-data-yahoo stocklist-instruments))
          (processed-data (stocklist-parse-data-yahoo raw-data))
          (export-buffer (stocklist-export-to-org-table processed-data)))
-    (pop-to-buffer export-buffer)))
+    export-buffer))
+
+;; TODO: pass the environment automagically
+;; TODO: pass the current stocklist state and restore if we are reverting
+(defun stocklist-show ()
+  "Show formatted data for tracked stocks."
+  (interactive)
+  (async-start
+   `(lambda ()
+      ,(async-inject-variables (concat "\\`load-path\\'"))
+      (require 'stocklist)
+      ,(async-inject-variables (concat "\\`" (regexp-opt '("stocklist-instruments" "stocklist-query-code-yahoo")) "\\'"))
+      (with-current-buffer (stocklist-get-buffer)
+        (buffer-substring-no-properties (point-min) (point-max))))
+   (lambda (result)
+     (with-current-buffer (get-buffer-create "*stocklist*")
+       (erase-buffer)
+       (insert result)
+       (stocklist-mode)
+       (goto-char (point-min))
+       (pop-to-buffer (current-buffer))))))
 
 ;; TODO: add automatic reverting
 (defun stocklist-revert ()
   "Revert stocklist."
   (interactive)
-  (stocklist-show))
+  (let ((row (line-number-at-pos))
+        (col (org-table-current-column)))
+    (stocklist-show)
+    (goto-char (point-min))
+    (forward-line (1- row))
+    (org-table-goto-column col)))
 
 ;; TODO: add persistent ordering between reloads
 (defvar stocklist-mode-map
