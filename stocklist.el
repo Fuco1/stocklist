@@ -1,4 +1,4 @@
-;;; stocklist.el --- Grab and display stocks information
+;;; stocklist.el --- Grab and display stocks information -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2016 Matúš Goljer
 
