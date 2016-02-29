@@ -45,6 +45,9 @@
   :group 'stocklist)
 
 ;; TODO: generate the defstruct based on the code somehow?
+;; p - last close
+;; g - day low
+;; h - day high
 (defcustom stocklist-query-code-yahoo "nsbaryde"
   "Query code for Yahoo API."
   :type 'string
