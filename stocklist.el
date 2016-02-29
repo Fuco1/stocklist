@@ -146,6 +146,31 @@ symbol."
                 ;; TODO: don't pass number right away?
                 (content (string-to-number (buffer-substring-no-properties cb ce))))
           (funcall fn cb ce content))))))
+
+(defun stocklist-fontify ()
+  "Fontify the buffer using stocklist rules."
+  (setq-local font-lock-keywords nil)
+  (font-lock-mode -1)
+  (font-lock-mode 1)
+  (variable-pitch-mode -1)
+  (put-text-property (point-min) (point-max) 'font-lock-face 'org-table)
+  (stocklist-with-column "payout"
+    (lambda (cb ce content)
+      (when (> content 0.6)
+        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
+      (when (< content 0.4)
+        (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face))))
+  (stocklist-with-column "yield"
+    (lambda (cb ce content)
+      (when (> content 3)
+        (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face))
+      (when (< content 1.5)
+        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))))
+  (stocklist-with-column "eps"
+    (lambda (cb ce content)
+      (when (<= content 0)
+        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face)))))
+
 ;; TODO: pass the environment automagically
 ;; TODO: pass the current stocklist state and restore if we are reverting
 (defun stocklist-show ()
@@ -163,6 +188,7 @@ symbol."
        (erase-buffer)
        (insert result)
        (stocklist-mode)
+       (stocklist-fontify)
        (goto-char (point-min))
        (pop-to-buffer (current-buffer))))))
 
