@@ -116,6 +116,36 @@ symbol."
          (export-buffer (stocklist-export-to-org-table processed-data)))
     export-buffer))
 
+;; TODO: extract to a general "org" helper package
+(defun stocklist-goto-cell-beginning ()
+  "Move point to the first non-whitespace char in current cell."
+  (re-search-backward "|")
+  (forward-char 1)
+  (skip-syntax-forward " "))
+
+;; TODO: extract to a general "org" helper package
+(defun stocklist-goto-column (column-name)
+  "Go to column COLUMN-NAME."
+  (goto-char (point-min))
+  (unless (re-search-forward column-name nil t)
+    (error "Column %s not found" column-name))
+  (stocklist-goto-cell-beginning))
+
+;; TODO: extract to a general "org" helper package
+(defun stocklist-with-column (column-name fn)
+  "Run FN with point in each cell of column COLUMN-NAME."
+  (declare (indent 1))
+  (save-excursion
+    (stocklist-goto-column column-name)
+    (let ((cc (org-table-current-column)))
+      (forward-line 1)
+      (while (and (= 0 (forward-line 1))
+                  (not (eobp)))
+        (org-table-goto-column cc)
+        (-let* (((_ (&plist :contents-begin cb :contents-end ce)) (org-element-table-cell-parser))
+                ;; TODO: don't pass number right away?
+                (content (string-to-number (buffer-substring-no-properties cb ce))))
+          (funcall fn cb ce content))))))
 ;; TODO: pass the environment automagically
 ;; TODO: pass the current stocklist state and restore if we are reverting
 (defun stocklist-show ()
