@@ -34,6 +34,7 @@
 
 (require 'url)
 (require 'org-table)
+(require 'org-element)
 
 (defgroup stocklist ()
   "Stocklist."
