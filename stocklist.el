@@ -59,17 +59,21 @@
   :type 'string
   :group 'stocklist)
 
+(defun stocklist-url-retrieve-body (url)
+  "Retrieve content from URL and return the body of the http response."
+  (with-current-buffer (url-retrieve-synchronously url)
+    (goto-char (point-min))
+    (when (search-forward "\n\n" nil t)
+      (s-trim (buffer-substring (point) (point-max))))))
+
 (defun stocklist-get-data-yahoo (stocks)
   "Retrieve the raw data for the STOCKS.
 
 STOCKS is a list of strings where each string is a ticker
 symbol."
-  (with-current-buffer (url-retrieve-synchronously
-                        (format "http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s"
-                                (s-join "+" stocks) stocklist-query-code-yahoo))
-    (goto-char (point-min))
-    (when (search-forward "\n\n" nil t)
-      (s-trim (buffer-substring (point) (point-max))))))
+  (stocklist-url-retrieve-body
+   (format "http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s"
+           (s-join "+" stocks) stocklist-query-code-yahoo)))
 
 ;; TODO: add alerts on the values
 (cl-defstruct stocklist-instrument name symbol bid ask pe yield dps eps payout)
