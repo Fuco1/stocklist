@@ -45,6 +45,11 @@
   :type '(repeat string)
   :group 'stocklist)
 
+(defcustom stocklist-quandl-api-key "74j1sBFqMF1_hsKgSC8x"
+  "API Key for Quandl database."
+  :type 'string
+  :group 'stocklist)
+
 ;; TODO: generate the defstruct based on the code somehow?
 ;; p - last close
 ;; g - day low
