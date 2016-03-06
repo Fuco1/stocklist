@@ -59,6 +59,11 @@
   :type 'string
   :group 'stocklist)
 
+(defcustom stocklist-quandl-cache-directory "~/.cache/emacs/stocklist"
+  "Cache directory for quandl data."
+  :type 'string
+  :group 'stocklist)
+
 (defun stocklist-url-retrieve-body (url)
   "Retrieve content from URL and return the body of the http response."
   (with-current-buffer (url-retrieve-synchronously url)
@@ -74,6 +79,33 @@ symbol."
   (stocklist-url-retrieve-body
    (format "http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s"
            (s-join "+" stocks) stocklist-query-code-yahoo)))
+
+(defun stocklist-get-data-quandl (ticker)
+  "Retrieve stock data for TICKER from quandl.
+
+Historical data is cached."
+  (unless (file-directory-p stocklist-quandl-cache-directory)
+    (make-directory stocklist-quandl-cache-directory t))
+  (let ((cache-file (concat stocklist-quandl-cache-directory "/" ticker ".el")))
+    ;; TODO: check the date of cache creation and re-download newer
+    ;; data if needed
+    (if (file-exists-p cache-file)
+        (with-temp-buffer
+          (insert-file-contents cache-file)
+          (goto-char (point-min))
+          (read (current-buffer)))
+      (let* ((raw-data (stocklist-url-retrieve-body
+                        (format "https://www.quandl.com/api/v3/datasets/WIKI/%s/data.csv?api_key=74j1sBFqMF1_hsKgSC8x" ticker)))
+             (raw-rows (cdr (parse-csv-string-rows raw-data ?\, ?\" "\n")))
+             (rows (mapcar
+                    (lambda (row)
+                      (cons
+                       (car row)
+                       (mapcar 'string-to-number (cdr row))))
+                    raw-rows)))
+        (with-temp-file cache-file
+          (insert (format "%S" rows))
+          rows)))))
 
 ;; TODO: add alerts on the values
 (cl-defstruct stocklist-instrument name symbol bid ask pe yield dps eps payout)
