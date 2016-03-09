@@ -41,9 +41,26 @@
   :group 'comm)
 
 (defcustom stocklist-instruments nil
-  "List of tracked instruments."
-  :type '(repeat string)
+  "List of tracked instruments.
+
+Each instrument has some optional properties:
+
+- :face is a face used to highlight this instrument's row.  Stocklist
+  package comes with some predefined faces for common \"states\", but
+  you can use any face you wish.
+- :tags is a list of tags.  You can filter/group instruments by these."
+  :type '(alist :key-type (string :tag "Stock symbol")
+                :value-type (plist :key-type symbol
+                                   :value-type sexp
+                                   :options ((:face face)
+                                             (:tags (repeat string)))))
   :group 'stocklist)
+
+(defun stocklist-instruments ()
+  "Return the tracked instruments.
+
+This extracts the symbols from `stocklist-instruments' variable."
+  (-map 'car stocklist-instruments))
 
 (defcustom stocklist-quandl-api-key "74j1sBFqMF1_hsKgSC8x"
   "API Key for Quandl database."
@@ -153,7 +170,7 @@ Historical data is cached."
 
 (defun stocklist-get-buffer ()
   "Get buffer with updated data."
-  (let* ((raw-data (stocklist-get-data-yahoo stocklist-instruments))
+  (let* ((raw-data (stocklist-get-data-yahoo (stocklist-instruments)))
          (processed-data (stocklist-parse-data-yahoo raw-data))
          (export-buffer (stocklist-export-to-org-table processed-data)))
     export-buffer))
