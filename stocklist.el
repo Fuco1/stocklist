@@ -231,7 +231,14 @@ Historical data is cached."
     (lambda (cb ce content)
       (let ((content (string-to-number content)))
         (when (<= content 0)
-          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))))))
+          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face)))))
+  (stocklist-with-column "Symbol"
+    (lambda (_ _ symbol)
+      (-when-let ((&alist symbol (&plist :face face)) stocklist-instruments)
+        (font-lock-prepend-text-property
+         (line-beginning-position)
+         (line-end-position)
+         'font-lock-face face)))))
 
 ;; TODO: pass the environment automagically
 ;; TODO: pass the current stocklist state and restore if we are reverting
