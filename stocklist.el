@@ -81,6 +81,18 @@ This extracts the symbols from `stocklist-instruments' variable."
   :type 'string
   :group 'stocklist)
 
+(defface stocklist-owned
+  '((t (:background "black")))
+  "Face used to highlight owned stocks."
+  :group 'stocklist)
+
+(defface stocklist-alert
+  '((t (:background "grey")))
+  "Face used to highlight stocks on alert.
+
+What alert means is up to the user."
+  :group 'stocklist)
+
 (defun stocklist-url-retrieve-body (url)
   "Retrieve content from URL and return the body of the http response."
   (with-current-buffer (url-retrieve-synchronously url)
