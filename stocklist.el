@@ -203,7 +203,7 @@ Historical data is cached."
         (org-table-goto-column cc)
         (-let* (((_ (&plist :contents-begin cb :contents-end ce)) (org-element-table-cell-parser))
                 ;; TODO: don't pass number right away?
-                (content (string-to-number (buffer-substring-no-properties cb ce))))
+                (content (buffer-substring-no-properties cb ce)))
           (funcall fn cb ce content))))))
 
 (defun stocklist-fontify ()
@@ -215,20 +215,23 @@ Historical data is cached."
   (put-text-property (point-min) (point-max) 'font-lock-face 'org-table)
   (stocklist-with-column "payout"
     (lambda (cb ce content)
-      (when (> content 0.6)
-        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
-      (when (< content 0.4)
-        (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face))))
+      (let* ((content (string-to-number content)))
+        (when (> content 0.6)
+          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
+        (when (< content 0.4)
+          (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face)))))
   (stocklist-with-column "yield"
     (lambda (cb ce content)
-      (when (> content 3)
-        (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face))
-      (when (< content 1.5)
-        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))))
+      (let ((content (string-to-number content)))
+        (when (> content 3)
+          (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face))
+        (when (< content 1.5)
+          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face)))))
   (stocklist-with-column "eps"
     (lambda (cb ce content)
-      (when (<= content 0)
-        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face)))))
+      (let ((content (string-to-number content)))
+        (when (<= content 0)
+          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))))))
 
 ;; TODO: pass the environment automagically
 ;; TODO: pass the current stocklist state and restore if we are reverting
