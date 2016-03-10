@@ -218,6 +218,8 @@ Historical data is cached."
                 (content (buffer-substring-no-properties cb ce)))
           (funcall fn cb ce content))))))
 
+;; TODO: add user-definable callbacks to work with columns and move
+;; the "column fontifiers" into separate functions one can register
 (defun stocklist-fontify ()
   "Fontify the buffer using stocklist rules."
   (setq-local font-lock-keywords nil)
