@@ -276,9 +276,27 @@ Historical data is cached."
 
 ;; TODO: pass the environment automagically
 ;; TODO: pass the current stocklist state and restore if we are reverting
-(defun stocklist-show ()
+(defun stocklist-show (&optional query)
   "Show formatted data for tracked stocks."
-  (interactive)
+  (interactive
+   (list (let* ((keymap (copy-keymap minibuffer-local-map))
+                (tags (-uniq (--mapcat (plist-get (cdr it) :tags) stocklist-instruments)))
+                (minibuffer-completion-table
+                 (completion-table-dynamic
+                  (lambda (string)
+                    (let* ((tags-in-query (split-string string "[+|]"))
+                           (active-tag (-last-item tags-in-query)))
+                      (-map
+                       (lambda (s)
+                         (let* ((slices (s-slice-at "[+|]" string))
+                                (suffix (if (= 1 (length slices))
+                                            (car slices)
+                                          (substring (-last-item slices) 1)))
+                                (prefix (s-chop-suffix suffix string)))
+                           (concat prefix s)))
+                       (all-completions active-tag tags)))))))
+           (define-key keymap (kbd "<tab>") 'minibuffer-complete)
+           (read-from-minibuffer "Query: " nil keymap))))
   (async-start
    `(lambda ()
       ,(async-inject-variables (concat "\\`load-path\\'"))
