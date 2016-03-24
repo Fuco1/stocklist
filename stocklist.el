@@ -58,6 +58,12 @@ Each instrument has some optional properties:
                                              (:tags (repeat string)))))
   :group 'stocklist)
 
+(defcustom stocklist-tag-to-face nil
+  "Map tags to faces."
+  :type '(alist :key-type (string :tag "Tag")
+                :value-type face)
+  :group 'stocklist)
+
 (defun stocklist-instruments (&optional query)
   "Return the tracked instruments.
 
@@ -270,7 +276,8 @@ Historical data is cached."
           (put-text-property cb ce 'font-lock-face 'font-lock-warning-face)))))
   (stocklist-with-column "Symbol"
     (lambda (_ _ symbol)
-      (-when-let ((&alist symbol (&plist :face face)) stocklist-instruments)
+      (-let* (((&alist symbol (&plist :face face :tags tags)) stocklist-instruments)
+              (face (or face (cdr (--some (assoc it stocklist-tag-to-face) tags)))))
         (font-lock-prepend-text-property
          (line-beginning-position)
          (line-end-position)
