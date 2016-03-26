@@ -121,6 +121,11 @@ Examples:
 What alert means is up to the user."
   :group 'stocklist)
 
+(cl-defstruct stocklist-buffer-state query ordering)
+
+(defvar stocklist-state nil
+  "Stocklist state.")
+
 (defun stocklist-url-retrieve-body (url)
   "Retrieve content from URL and return the body of the http response."
   (with-current-buffer (url-retrieve-synchronously url)
@@ -318,12 +323,19 @@ function `stocklist-instruments'."
         (buffer-substring-no-properties (point-min) (point-max))))
    (lambda (result)
      (with-current-buffer (get-buffer-create "*stocklist*")
-       (erase-buffer)
-       (insert result)
-       (stocklist-mode)
-       (stocklist-fontify)
-       (goto-char (point-min))
-       (pop-to-buffer (current-buffer))))))
+       (let ((state (when (local-variable-p 'stocklist-state)
+                      stocklist-state)))
+         (erase-buffer)
+         (insert result)
+         (stocklist-mode)
+         (set (make-local-variable 'stocklist-state)
+              (make-stocklist-buffer-state :query query))
+         (when state
+           (setf (stocklist-buffer-state-ordering stocklist-state)
+                 (stocklist-buffer-state-ordering state)))
+         (stocklist-fontify)
+         (goto-char (point-min))
+         (pop-to-buffer (current-buffer)))))))
 
 ;; TODO: add automatic reverting
 (defun stocklist-revert ()
