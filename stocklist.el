@@ -349,12 +349,13 @@ Optional argument INITIAL specifies initial content."
          (pop-to-buffer (current-buffer)))))))
 
 ;; TODO: add automatic reverting
-(defun stocklist-revert ()
+(defun stocklist-revert (&optional query)
   "Revert stocklist."
-  (interactive)
+  (interactive (list (stocklist-read-query
+                      (stocklist-buffer-state-query stocklist-state))))
   (let ((row (line-number-at-pos))
         (col (org-table-current-column)))
-    (stocklist-show)
+    (stocklist-show query)
     (goto-char (point-min))
     (forward-line (1- row))
     (org-table-goto-column col)))
