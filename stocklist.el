@@ -208,9 +208,12 @@ Historical data is cached."
       (org-table-align)
       (current-buffer))))
 
-(defun stocklist-get-buffer ()
-  "Get buffer with updated data."
-  (let* ((raw-data (stocklist-get-data-yahoo (stocklist-instruments)))
+(defun stocklist-get-buffer (&optional query)
+  "Get buffer with updated data.
+
+QUERY is a query string to select a subset of instruments.  See
+function `stocklist-instruments'."
+  (let* ((raw-data (stocklist-get-data-yahoo (stocklist-instruments query)))
          (processed-data (stocklist-parse-data-yahoo raw-data))
          (export-buffer (stocklist-export-to-org-table processed-data)))
     export-buffer))
@@ -311,7 +314,7 @@ Historical data is cached."
       ,(async-inject-variables (concat "\\`load-path\\'"))
       (require 'stocklist)
       ,(async-inject-variables (concat "\\`" (regexp-opt '("stocklist-instruments" "stocklist-query-code-yahoo")) "\\'"))
-      (with-current-buffer (stocklist-get-buffer)
+      (with-current-buffer (stocklist-get-buffer ,query)
         (buffer-substring-no-properties (point-min) (point-max))))
    (lambda (result)
      (with-current-buffer (get-buffer-create "*stocklist*")
