@@ -291,29 +291,40 @@ function `stocklist-instruments'."
          (line-end-position)
          'font-lock-face face)))))
 
+(defun stocklist-read-query (&optional initial)
+  "Read a stocklist query.
+
+Optional argument INITIAL specifies initial content."
+  (let* ((keymap (copy-keymap minibuffer-local-map))
+         (tags (-uniq (--mapcat (plist-get (cdr it) :tags) stocklist-instruments)))
+         (minibuffer-completion-table
+          (completion-table-dynamic
+           (lambda (string)
+             (let* ((tags-in-query (split-string string "[+|]"))
+                    (active-tag (-last-item tags-in-query)))
+               (-map
+                (lambda (s)
+                  (let* ((slices (s-slice-at "[+|]" string))
+                         (suffix (if (= 1 (length slices))
+                                     (car slices)
+                                   (substring (-last-item slices) 1)))
+                         (prefix (s-chop-suffix suffix string)))
+                    (concat prefix s)))
+                (all-completions active-tag tags)))))))
+    (define-key keymap (kbd "<tab>") 'minibuffer-complete)
+    (read-from-minibuffer (format
+                           "Query%s: "
+                           (if (and initial
+                                    (< 0 (length initial)))
+                               (format " [default: %s]" initial) ""))
+                          initial keymap nil nil initial)))
+
 ;; TODO: pass the environment automagically
 ;; TODO: pass the current stocklist state and restore if we are reverting
 (defun stocklist-show (&optional query)
   "Show formatted data for tracked stocks."
   (interactive
-   (list (let* ((keymap (copy-keymap minibuffer-local-map))
-                (tags (-uniq (--mapcat (plist-get (cdr it) :tags) stocklist-instruments)))
-                (minibuffer-completion-table
-                 (completion-table-dynamic
-                  (lambda (string)
-                    (let* ((tags-in-query (split-string string "[+|]"))
-                           (active-tag (-last-item tags-in-query)))
-                      (-map
-                       (lambda (s)
-                         (let* ((slices (s-slice-at "[+|]" string))
-                                (suffix (if (= 1 (length slices))
-                                            (car slices)
-                                          (substring (-last-item slices) 1)))
-                                (prefix (s-chop-suffix suffix string)))
-                           (concat prefix s)))
-                       (all-completions active-tag tags)))))))
-           (define-key keymap (kbd "<tab>") 'minibuffer-complete)
-           (read-from-minibuffer "Query: " nil keymap))))
+   (list (stocklist-read-query)))
   (async-start
    `(lambda ()
       ,(async-inject-variables (concat "\\`load-path\\'"))
