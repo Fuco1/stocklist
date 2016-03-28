@@ -109,6 +109,13 @@ Examples:
   :type 'string
   :group 'stocklist)
 
+(defcustom stocklist-column-fontifiers nil
+  "Column fontifiers."
+  :type '(alist
+          :key-type string
+          :value-type sexp)
+  :group 'stocklist)
+
 (defface stocklist-owned
   '((t (:background "black")))
   "Face used to highlight owned stocks."
@@ -254,8 +261,27 @@ function `stocklist-instruments'."
                 (content (buffer-substring-no-properties cb ce)))
           (funcall fn cb ce content))))))
 
-;; TODO: add user-definable callbacks to work with columns and move
-;; the "column fontifiers" into separate functions one can register
+(defun stocklist-fontify-numeric-cell (high low)
+  "Fontify numeric cell"
+  (lambda (cb ce content)
+    (let* ((content (string-to-number content)))
+      ;; TODO: extract the ratios
+      (when (> content high)
+        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
+      (when (< content low)
+        (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face)))))
+(defun stocklist-run-column-fontifiers (list)
+  "Run all the fontifiers in LIST.
+
+LIST is an alist mapping column name to a FONTIFIER.  FONTIFIER
+is a function taking three values: CB and CE are beginning and
+end points of the cell and CONTENT is the string value of the
+cell.  Each fontifier function should operate on a single cell
+only."
+  (-each list
+    (-lambda ((col . fontifier))
+      (stocklist-with-column col fontifier))))
+
 (defun stocklist-fontify ()
   "Fontify the buffer using stocklist rules."
   (setq-local font-lock-keywords nil)
@@ -263,25 +289,7 @@ function `stocklist-instruments'."
   (font-lock-mode 1)
   (variable-pitch-mode -1)
   (put-text-property (point-min) (point-max) 'font-lock-face 'org-table)
-  (stocklist-with-column "payout"
-    (lambda (cb ce content)
-      (let* ((content (string-to-number content)))
-        (when (> content 0.6)
-          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
-        (when (< content 0.4)
-          (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face)))))
-  (stocklist-with-column "yield"
-    (lambda (cb ce content)
-      (let ((content (string-to-number content)))
-        (when (> content 3)
-          (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face))
-        (when (< content 1.5)
-          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face)))))
-  (stocklist-with-column "eps"
-    (lambda (cb ce content)
-      (let ((content (string-to-number content)))
-        (when (<= content 0)
-          (put-text-property cb ce 'font-lock-face 'font-lock-warning-face)))))
+  (stocklist-run-column-fontifiers stocklist-column-fontifiers)
   (stocklist-with-column "Symbol"
     (lambda (_ _ symbol)
       (-let* (((&alist symbol (&plist :face face :tags tags)) stocklist-instruments)
