@@ -113,7 +113,7 @@ Examples:
   "Column fontifiers."
   :type '(alist
           :key-type string
-          :value-type sexp)
+          :value-type function)
   :group 'stocklist)
 
 (defface stocklist-owned
