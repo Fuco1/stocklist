@@ -261,14 +261,14 @@ function `stocklist-instruments'."
                 (content (buffer-substring-no-properties cb ce)))
           (funcall fn cb ce content))))))
 
-(defun stocklist-fontify-numeric-cell (high low)
+(defun stocklist-fontify-numeric-cell (high low &optional reverse)
   "Fontify numeric cell"
   (lambda (cb ce content)
     (let* ((content (string-to-number content)))
       ;; TODO: extract the ratios
-      (when (> content high)
+      (when (if reverse (< content low) (> content high))
         (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
-      (when (< content low)
+      (when (if reverse (> content high) (< content low))
         (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face)))))
 (defun stocklist-run-column-fontifiers (list)
   "Run all the fontifiers in LIST.
