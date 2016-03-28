@@ -270,6 +270,19 @@ function `stocklist-instruments'."
         (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
       (when (if reverse (> content high) (< content low))
         (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face)))))
+
+(defun stocklist--fontify-payout (cb ce content)
+  "Fontify the payout cell."
+  (funcall (stocklist-fontify-numeric-cell 0.6 0.4) cb ce content))
+
+(defun stocklist--fontify-yield (cb ce content)
+  "Fontify the yield cell."
+  (funcall (stocklist-fontify-numeric-cell 3 1.5 :reverse) cb ce content))
+
+(defun stocklist--fontify-eps (cb ce content)
+  "Fontify the eps cell."
+  (funcall (stocklist-fontify-numeric-cell 1000 0.001 :reverse) cb ce content))
+
 (defun stocklist-run-column-fontifiers (list)
   "Run all the fontifiers in LIST.
 
