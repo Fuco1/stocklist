@@ -88,6 +88,16 @@ Each instrument has some optional properties:
                 :value-type face)
   :group 'stocklist)
 
+(defcustom stocklist-default-sort nil
+  "Default sort."
+  :type '(radio
+          (const nil)
+          (cons stocklist-columns
+                (radio
+                 (const asc)
+                 (const desc))))
+  :group 'stocklist)
+
 (defun stocklist-instruments (&optional query)
   "Return the tracked instruments.
 
@@ -280,11 +290,17 @@ function `stocklist-instruments'."
   (skip-syntax-forward " "))
 
 ;; TODO: extract to a general "org" helper package
-(defun stocklist-goto-column (column-name)
-  "Go to column COLUMN-NAME."
+(defun stocklist-goto-column (column-name &optional goto-data)
+  "Go to column COLUMN-NAME.
+
+If GOTO-DATA is non-nil, go to first row with data."
   (goto-char (point-min))
   (unless (re-search-forward column-name nil t)
     (error "Column %s not found" column-name))
+  (when goto-data
+    (let ((cc (org-table-current-column)))
+      (forward-line 2)
+      (org-table-goto-column cc)))
   (stocklist-goto-cell-beginning))
 
 (defun stocklist-get-cell (&optional column)
@@ -409,6 +425,14 @@ MORE-OR-LESS is one of '< or '>."
         (when signals
           (stocklist--fontify-signals signals))))))
 
+(defun stocklist--sort (how)
+  "Sort lines in the stocklist listing."
+  (save-excursion
+    (when how
+      (-let (((col . direction) how))
+        (stocklist-goto-column (symbol-name col) t)
+        (org-table-sort-lines nil (if (eq direction 'asc) ?n ?N))))))
+
 (defun stocklist-read-query (&optional initial)
   "Read a stocklist query.
 
@@ -458,11 +482,14 @@ Optional argument INITIAL specifies initial content."
          (insert result)
          (stocklist-mode)
          (set (make-local-variable 'stocklist-state)
-              (make-stocklist-buffer-state :query query))
+              (make-stocklist-buffer-state
+               :query query
+               :ordering stocklist-default-sort))
          (when state
            (setf (stocklist-buffer-state-ordering stocklist-state)
                  (stocklist-buffer-state-ordering state)))
          (stocklist-fontify)
+         (stocklist--sort (stocklist-buffer-state-ordering stocklist-state))
          (goto-char (point-min))
          (pop-to-buffer (current-buffer)))))))
 
