@@ -40,8 +40,6 @@
   "Stocklist."
   :group 'comm)
 
-;; TODO: add a defcustom linking faces to tags so I don't have to
-;; specify both
 (defcustom stocklist-instruments nil
   "List of tracked instruments.
 
