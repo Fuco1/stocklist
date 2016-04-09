@@ -405,7 +405,7 @@ MORE-OR-LESS is one of '< or '>."
              (eq (cadr sig) '>))
         (stocklist--fontify-more-or-less-signal sig '>))))))
 
-(defun stocklist-fontify ()
+(defun stocklist--fontify ()
   "Fontify the buffer using stocklist rules."
   (setq-local font-lock-keywords nil)
   (font-lock-mode -1)
@@ -488,7 +488,7 @@ Optional argument INITIAL specifies initial content."
          (when state
            (setf (stocklist-buffer-state-ordering stocklist-state)
                  (stocklist-buffer-state-ordering state)))
-         (stocklist-fontify)
+         (stocklist--fontify)
          (stocklist--sort (stocklist-buffer-state-ordering stocklist-state))
          (goto-char (point-min))
          (pop-to-buffer (current-buffer)))))))
