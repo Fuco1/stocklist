@@ -248,6 +248,23 @@ function `stocklist-instruments'."
     (error "Column %s not found" column-name))
   (stocklist-goto-cell-beginning))
 
+(defun stocklist-get-cell (&optional column)
+  "Get cell data of cell under point.
+
+If optional argument COLUMN is set, get data of that column at
+current row."
+  (save-excursion
+    (when column (stocklist-goto-current-column column))
+    (-let* (((_ (&plist :contents-begin cb :contents-end ce)) (org-element-table-cell-parser)))
+      (list :beg cb :end ce :content (buffer-substring-no-properties cb ce)))))
+
+(defun stocklist-goto-current-column (column)
+  "Go to column COLUMN at current row."
+  (let ((cn (save-excursion
+              (stocklist-goto-column column)
+              (org-table-current-column))))
+    (org-table-goto-column cn)))
+
 ;; TODO: extract to a general "org" helper package
 (defun stocklist-with-column (column-name fn)
   "Run FN with point in each cell of column COLUMN-NAME."
