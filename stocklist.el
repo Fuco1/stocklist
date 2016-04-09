@@ -157,6 +157,14 @@ What alert means is up to the user."
   "Face used to highlight cell on signal alert."
   :group 'stocklist)
 
+(defface stocklist-watched-cell
+  '((t (:background "indian red")))
+  "Face used to highlight cell with a defined signal.
+
+If the signal triggered, `stocklist-signal-cell' face is used
+instead."
+  :group 'stocklist)
+
 (cl-defstruct stocklist-buffer-state query ordering)
 
 (defvar stocklist-state nil
@@ -354,10 +362,17 @@ SIG is the signal data.
 MORE-OR-LESS is one of '< or '>."
   (-let* ((column (symbol-name (car sig)))
           ((&plist :beg beg :end end :content content) (stocklist-get-cell column)))
-    (when (funcall more-or-less (string-to-number content) (nth 2 sig))
-      (font-lock-prepend-text-property beg end 'font-lock-face 'stocklist-signal-cell)
+    (if (funcall more-or-less (string-to-number content) (nth 2 sig))
+        (progn
+          (font-lock-prepend-text-property beg end 'font-lock-face 'stocklist-signal-cell)
+          (add-text-properties
+           beg end `(help-echo ,(format "%s is %s than %.2f"
+                                        column
+                                        (if (eq '< more-or-less) "less" "more")
+                                        (nth 2 sig)))))
+      (font-lock-prepend-text-property beg end 'font-lock-face 'stocklist-watched-cell)
       (add-text-properties
-       beg end `(help-echo ,(format "%s is %s than %.2f"
+       beg end `(help-echo ,(format "%s should be %s than %.2f"
                                     column
                                     (if (eq '< more-or-less) "less" "more")
                                     (nth 2 sig)))))))
