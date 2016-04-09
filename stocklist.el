@@ -183,14 +183,14 @@ instead."
 STOCKS is a list of strings where each string is a ticker
 symbol."
   (let ((parts (-partition-all 50 stocks)))
-    (apply
-     'concat
-     (-map
-      (lambda (p)
-        (stocklist-url-retrieve-body
-         (format "http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s"
-                 (s-join "+" p) stocklist-query-code-yahoo)))
-      parts))))
+    (mapconcat
+     (lambda (p)
+       (stocklist-url-retrieve-body
+        (format "http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s"
+                (s-join "+" p) stocklist-query-code-yahoo)))
+     parts
+     "\n")))
+
 (defun stocklist-get-data-quandl (ticker)
   "Retrieve stock data for TICKER from quandl.
 
