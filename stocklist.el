@@ -40,6 +40,31 @@
   "Stocklist."
   :group 'comm)
 
+(define-widget 'stocklist-columns 'lazy
+  "Stocklist columns"
+  :tag "Column"
+  :type '(choice
+           (const :tag "Bid" bid)
+           (const :tag "Ask" ask)
+           (const :tag "PE" pe)
+           (const :tag "Yield" yield)
+           (const :tag "DPS" dps)
+           (const :tag "EPS" eps)
+           (const :tag "Payout" payout)))
+
+(define-widget 'stocklist-signal 'lazy
+  "Stocklist signal"
+  :tag "Signal"
+  :type '(choice (list :tag "Value less than"
+                   stocklist-columns
+                   (const <)
+                   (number :tag "Value"))
+                 (list :tag "Value greater than"
+                   stocklist-columns
+                   (const >)
+                   (number :tag "Value"))
+                 (function :tag "Function")))
+
 (defcustom stocklist-instruments nil
   "List of tracked instruments.
 
@@ -53,7 +78,8 @@ Each instrument has some optional properties:
                 :value-type (plist :key-type symbol
                                    :value-type sexp
                                    :options ((:face face)
-                                             (:tags (repeat string)))))
+                                             (:tags (repeat string))
+                                             (:signals (repeat stocklist-signal)))))
   :group 'stocklist)
 
 (defcustom stocklist-tag-to-face nil
@@ -124,6 +150,11 @@ Examples:
   "Face used to highlight stocks on alert.
 
 What alert means is up to the user."
+  :group 'stocklist)
+
+(defface stocklist-signal-cell
+  '((t (:background "blue")))
+  "Face used to highlight cell on signal alert."
   :group 'stocklist)
 
 (cl-defstruct stocklist-buffer-state query ordering)
@@ -315,6 +346,34 @@ only."
     (-lambda ((col . fontifier))
       (stocklist-with-column col fontifier))))
 
+(defun stocklist--fontify-more-or-less-signal (sig more-or-less)
+  "Fontify cell where < or > signal triggered.
+
+SIG is the signal data.
+
+MORE-OR-LESS is one of '< or '>."
+  (-let* ((column (symbol-name (car sig)))
+          ((&plist :beg beg :end end :content content) (stocklist-get-cell column)))
+    (when (funcall more-or-less (string-to-number content) (nth 2 sig))
+      (font-lock-prepend-text-property beg end 'font-lock-face 'stocklist-signal-cell)
+      (add-text-properties
+       beg end `(help-echo ,(format "%s is %s than %.2f"
+                                    column
+                                    (if (eq '< more-or-less) "less" "more")
+                                    (nth 2 sig)))))))
+
+(defun stocklist--fontify-signals (signals)
+  "Fontify current row's cells with triggered SIGNALS."
+  (-each signals
+    (lambda (sig)
+      (cond
+       ((and (listp sig)
+             (eq (cadr sig) '<))
+        (stocklist--fontify-more-or-less-signal sig '<))
+       ((and (listp sig)
+             (eq (cadr sig) '>))
+        (stocklist--fontify-more-or-less-signal sig '>))))))
+
 (defun stocklist-fontify ()
   "Fontify the buffer using stocklist rules."
   (setq-local font-lock-keywords nil)
@@ -325,12 +384,15 @@ only."
   (stocklist-run-column-fontifiers stocklist-column-fontifiers)
   (stocklist-with-column "Symbol"
     (lambda (_ _ symbol)
-      (-let* (((&alist symbol (&plist :face face :tags tags)) stocklist-instruments)
+      (-let* (((&alist symbol (&plist :face face :tags tags :signals signals)) stocklist-instruments)
               (face (or face (cdr (--some (assoc it stocklist-tag-to-face) tags)))))
-        (font-lock-prepend-text-property
-         (line-beginning-position)
-         (line-end-position)
-         'font-lock-face face)))))
+        (when face
+          (font-lock-prepend-text-property
+           (line-beginning-position)
+           (line-end-position)
+           'font-lock-face face))
+        (when signals
+          (stocklist--fontify-signals signals))))))
 
 (defun stocklist-read-query (&optional initial)
   "Read a stocklist query.
