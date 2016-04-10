@@ -74,7 +74,8 @@ Each instrument has some optional properties:
 - :face is a face used to highlight this instrument's row.  Stocklist
   package comes with some predefined faces for common \"states\", but
   you can use any face you wish.
-- :tags is a list of tags.  You can filter/group instruments by these."
+- :tags is a list of tags.  You can filter/group instruments by these.
+  Tags are strings and can not contain the - character."
   :type '(alist :key-type (string :tag "Stock symbol")
                 :value-type (plist :key-type symbol
                                    :value-type sexp
@@ -106,23 +107,24 @@ QUERY is a query to select instruments by tags.  You can join
 multiple tags with + to select instruments with all the tags.
 You can join multiple tags with | to select tags with at least
 one of the tags in the group.  You can prefix a tag with ! to
-select instruments without this tag.  Logical and (+) has highest
-priority.
+select instruments without this tag.  Logical and (+) binds
+stronger than OR (|).
 
 Examples:
   a+b   : select all instruments with both tags \"a\" and \"b\"
   a|b   : select all instruments with either tags \"a\" or \"b\"
-  a+b|c : select all instruments with tag \"a\" and either \"b\" or \"c\"
+  a+b|c : select all instruments with tags (\"a\" and \"b\") or \"c\"
   !a    : select all instruments without the tag \"a\""
   (setq query (or query ""))
-  (let* ((and-groups (split-string query "+" t))
-         (or-groups (--map (split-string it "|") and-groups))
-         (form `(and ,@(-map
-                        (lambda (g)
-                          `(or ,@(--map (if (= (aref it 0) ?!)
+  (setq query (replace-regexp-in-string "-" "+!" query))
+  (let* ((or-groups (split-string query "|" t))
+         (and-groups (--map (split-string it "+") or-groups))
+         (form `(or ,@(-map
+                       (lambda (g)
+                         `(and ,@(--map (if (= (aref it 0) ?!)
                                             `(not (member ,(substring it 1) tags))
                                           `(member ,it tags)) g)))
-                        or-groups))))
+                       and-groups))))
     (-map 'car (--filter (eval `(let ((tags ',(plist-get (cdr it) :tags))) ,form)) stocklist-instruments))))
 
 (defcustom stocklist-quandl-api-key "74j1sBFqMF1_hsKgSC8x"
