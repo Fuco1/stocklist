@@ -6,7 +6,7 @@
 ;; Maintainer: Matúš Goljer <matus.goljer@gmail.com>
 ;; Version: 0.0.1
 ;; Created: 16th February 2016
-;; Package-requires: ((dash "2.10.0") (s "1.9") (parse-csv "0.3"))
+;; Package-requires: ((dash "2.12.1") (s "1.9") (parse-csv "0.3") (async "1.6"))
 ;; Keywords: news
 
 ;; This program is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'async)
 (require 'dash)
 (require 's)
 (require 'parse-csv)
