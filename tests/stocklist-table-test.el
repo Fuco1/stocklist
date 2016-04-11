@@ -67,6 +67,14 @@
 
 (describe "Query"
 
+  (it "should select everything with empty query"
+    (let ((stocklist-instruments (list
+                                  (list "foo" :tags (list "a" "b"))
+                                  (list "bar" :tags (list "a" "b"))
+                                  (list "baz" :tags (list "a"))
+                                  (list "qux" :tags (list "b")))))
+      (expect (stocklist-instruments "") :to-equal '("foo" "bar" "baz" "qux"))))
+
   (it "should select instruments with both tags"
     (let ((stocklist-instruments (list
                                   (list "foo" :tags (list "a" "b"))

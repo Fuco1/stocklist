@@ -119,12 +119,13 @@ Examples:
   (setq query (replace-regexp-in-string "-" "+!" query))
   (let* ((or-groups (split-string query "|" t))
          (and-groups (--map (split-string it "+") or-groups))
-         (form `(or ,@(-map
-                       (lambda (g)
-                         `(and ,@(--map (if (= (aref it 0) ?!)
-                                            `(not (member ,(substring it 1) tags))
-                                          `(member ,it tags)) g)))
-                       and-groups))))
+         (form (if (equal query "") t
+                 `(or ,@(-map
+                         (lambda (g)
+                           `(and ,@(--map (if (= (aref it 0) ?!)
+                                              `(not (member ,(substring it 1) tags))
+                                            `(member ,it tags)) g)))
+                         and-groups)))))
     (-map 'car (--filter (eval `(let ((tags ',(plist-get (cdr it) :tags))) ,form)) stocklist-instruments))))
 
 (defcustom stocklist-quandl-api-key "74j1sBFqMF1_hsKgSC8x"
