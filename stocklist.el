@@ -362,6 +362,10 @@ current row."
   "Fontify the eps cell."
   (funcall (stocklist-fontify-numeric-cell 1000 0.001 :reverse) cb ce content))
 
+(defun stocklist--fontify-pe (cb ce content)
+  "Fontify the pe cell."
+  (funcall (stocklist-fontify-numeric-cell 25 0.001) cb ce content))
+
 (defun stocklist-run-column-fontifiers (list)
   "Run all the fontifiers in LIST.
 
