@@ -319,6 +319,14 @@ current row."
     (-let* (((_ (&plist :contents-begin cb :contents-end ce)) (org-element-table-cell-parser)))
       (list :beg cb :end ce :content (buffer-substring-no-properties cb ce)))))
 
+(defun stocklist-get (property)
+  "Get value of PROPERTY at current row."
+  (let* ((name (substring (symbol-name property) 1))
+         (accessor (intern (concat "stocklist-instrument-" name))))
+    (funcall
+     accessor
+     (get-text-property (line-beginning-position) 'stocklist-row))))
+
 (defun stocklist-goto-current-column (column)
   "Go to column COLUMN at current row."
   (let ((cn (save-excursion
@@ -443,6 +451,45 @@ MORE-OR-LESS is one of '< or '>."
         (stocklist-goto-column (symbol-name col) t)
         (org-table-sort-lines nil (if (eq direction 'asc) ?n ?N))))))
 
+(defun stocklist--parse-table ()
+  "Parse resulting table rows back into stocklist structure.
+
+Put the structure as text property to the beginning of each row.
+
+Numbers are already parsed and saved as numbers."
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line)
+    (while (= (forward-line) 0)
+      (let ((items (-map
+                    's-trim
+                     (split-string
+                      (buffer-substring-no-properties
+                       (line-beginning-position)
+                       (line-end-position))
+                      "|" t))))
+        (when items
+          (put-text-property
+           (point) (1+ (point))
+           'stocklist-row
+            (make-stocklist-instrument
+             :name (nth 0 items)
+             :symbol (nth 1 items)
+             :bid (let ((v (nth 2 items)))
+                    (if (equal v "N/A") nil (string-to-number v)))
+             :ask (let ((v (nth 3 items)))
+                    (if (equal v "N/A") nil (string-to-number v)))
+             :pe (let ((v (nth 4 items)))
+                   (if (equal v "N/A") nil (string-to-number v)))
+             :yield (let ((v (nth 5 items)))
+                      (if (equal v "N/A") nil (string-to-number v)))
+             :dps (let ((v (nth 6 items)))
+                    (if (equal v "N/A") nil (string-to-number v)))
+             :eps (let ((v (nth 7 items)))
+                    (if (equal v "N/A") nil (string-to-number v)))
+             :payout (let ((v (nth 8 items)))
+                       (if (equal v "N/A") nil (string-to-number v))))))))))
+
 (defun stocklist-read-query (&optional initial)
   "Read a stocklist query.
 
@@ -485,23 +532,29 @@ Optional argument INITIAL specifies initial content."
       (with-current-buffer (stocklist-get-buffer ,query)
         (buffer-substring-no-properties (point-min) (point-max))))
    (lambda (result)
-     (with-current-buffer (get-buffer-create "*stocklist*")
-       (let ((state (when (local-variable-p 'stocklist-state)
-                      stocklist-state)))
-         (erase-buffer)
-         (insert result)
-         (stocklist-mode)
-         (set (make-local-variable 'stocklist-state)
-              (make-stocklist-buffer-state
-               :query query
-               :ordering stocklist-default-sort))
-         (when state
-           (setf (stocklist-buffer-state-ordering stocklist-state)
-                 (stocklist-buffer-state-ordering state)))
-         (stocklist--fontify)
-         (stocklist--sort (stocklist-buffer-state-ordering stocklist-state))
-         (goto-char (point-min))
-         (pop-to-buffer (current-buffer)))))))
+     (stocklist-handle-result result query))))
+
+(defun stocklist-handle-result (result query)
+  "Handle RESULT of QUERY."
+  (with-current-buffer (get-buffer-create "*stocklist*")
+    (let ((state (when (local-variable-p 'stocklist-state)
+                   stocklist-state)))
+      (erase-buffer)
+      (insert result)
+      (stocklist-mode)
+      (set (make-local-variable 'stocklist-state)
+           (make-stocklist-buffer-state
+            :query query
+            :ordering stocklist-default-sort))
+      (when state
+        (setf (stocklist-buffer-state-ordering stocklist-state)
+              (stocklist-buffer-state-ordering state)))
+      (font-lock-mode -1)
+      (stocklist--parse-table)
+      (stocklist--fontify)
+      (stocklist--sort (stocklist-buffer-state-ordering stocklist-state))
+      (goto-char (point-min))
+      (pop-to-buffer (current-buffer)))))
 
 ;; TODO: add automatic reverting
 (defun stocklist-revert (&optional query)
