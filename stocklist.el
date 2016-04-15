@@ -388,6 +388,39 @@ only."
     (-lambda ((col . fontifier))
       (stocklist-with-column col fontifier))))
 
+(defun stocklist--add-help-echo (beg end sig verb)
+  "Add help echo on watched/signal fields.
+
+BEG and END are buffer positions.
+
+SIG is the signal.
+
+VERB is either \"is\" or \"should be\""
+  (let ((column (symbol-name (car sig))))
+    (add-text-properties
+     beg end
+     `(help-echo
+       ,(format
+         "%s %s %s than %.2f.%s"
+         column
+         verb
+         (if (eq '< (cadr sig)) "less" "more")
+         (nth 2 sig)
+         (cond
+          ((equal column "yield")
+           (format
+            "  That gives price target of %.2f"
+            (* (stocklist-get :ask)
+               (/ (stocklist-get :yield)
+                  (nth 2 sig)))))
+          ((equal column "pe")
+           (format
+            "  That gives price target of %.2f"
+            (* (stocklist-get :ask)
+               (/ (nth 2 sig)
+                  (stocklist-get :pe)))))
+          (t "")))))))
+
 (defun stocklist--fontify-more-or-less-signal (sig more-or-less)
   "Fontify cell where < or > signal triggered.
 
@@ -399,17 +432,9 @@ MORE-OR-LESS is one of '< or '>."
     (if (funcall more-or-less (string-to-number content) (nth 2 sig))
         (progn
           (font-lock-prepend-text-property beg end 'face 'stocklist-signal-cell)
-          (add-text-properties
-           beg end `(help-echo ,(format "%s is %s than %.2f"
-                                        column
-                                        (if (eq '< more-or-less) "less" "more")
-                                        (nth 2 sig)))))
+          (stocklist--add-help-echo beg end sig "is"))
       (font-lock-prepend-text-property beg end 'face 'stocklist-watched-cell)
-      (add-text-properties
-       beg end `(help-echo ,(format "%s should be %s than %.2f"
-                                    column
-                                    (if (eq '< more-or-less) "less" "more")
-                                    (nth 2 sig)))))))
+      (stocklist--add-help-echo beg end sig "should be"))))
 
 (defun stocklist--fontify-signals (signals)
   "Fontify current row's cells with triggered SIGNALS."
