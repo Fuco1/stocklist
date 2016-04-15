@@ -8,13 +8,13 @@
 (describe "Stocklist parser"
 
   (spy-on 'parse-csv-string-rows :and-return-value
-          '(("Apple Inc." "AAPL" "108.57" "108.80" "11.56" "1.92" "2.08" "9.40")
-            ("Wells Fargo & Company Common St" "WFC" "47.05" "47.10" "11.42" "3.20" "1.50" "4.12")))
+          '(("Apple Inc." "AAPL" "108.57" "108.80" "11.56" "2.08" "9.40")
+            ("Wells Fargo & Company Common St" "WFC" "47.05" "47.10" "11.42" "1.50" "4.12")))
 
   (it "should parse csv into stocklist-instruments structure"
     (expect (stocklist-parse-data-yahoo "") :to-equal
-            (list [cl-struct-stocklist-instrument "Apple Inc." "AAPL" "108.57" "108.80" "11.56" "1.92" "2.08" "9.40" "0.22"]
-                  [cl-struct-stocklist-instrument "Wells Fargo & Company Common St" "WFC" "47.05" "47.10" "11.42" "3.20" "1.50" "4.12" "0.36"]))))
+            (list [cl-struct-stocklist-instrument "Apple Inc." "AAPL" "108.57" "108.80" "11.56" "1.91" "2.08" "9.40" "0.22"]
+                  [cl-struct-stocklist-instrument "Wells Fargo & Company Common St" "WFC" "47.05" "47.10" "11.42" "3.18" "1.50" "4.12" "0.36"]))))
 
 (describe "Stocklist renderer"
 

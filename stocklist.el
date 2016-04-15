@@ -137,7 +137,7 @@ Examples:
 ;; p - last close
 ;; g - day low
 ;; h - day high
-(defcustom stocklist-query-code-yahoo "nsbaryde"
+(defcustom stocklist-query-code-yahoo "nsbarde"
   "Query code for Yahoo API."
   :type 'string
   :group 'stocklist)
@@ -247,12 +247,14 @@ Historical data is cached."
         :bid (nth 2 items)
         :ask (nth 3 items)
         :pe (nth 4 items)
-        :yield (nth 5 items)
-        :dps (nth 6 items)
-        :eps (nth 7 items)
+        :yield (let ((div (string-to-number (nth 5 items))))
+                 (if (< div 0.001) "0.00"
+                   (format "%.2f" (/ div (string-to-number (nth 3 items)) 0.01))))
+        :dps (nth 5 items)
+        :eps (nth 6 items)
         :payout (format "%.2f"
-                        (/ (string-to-number (nth 6 items))
-                           (string-to-number (nth 7 items))))))
+                        (/ (string-to-number (nth 5 items))
+                           (string-to-number (nth 6 items))))))
      raw-rows)))
 
 (defun stocklist-export-to-org-table (data)
