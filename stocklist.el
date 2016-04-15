@@ -356,9 +356,9 @@ current row."
     (let* ((content (string-to-number content)))
       ;; TODO: extract the ratios
       (when (if reverse (< content low) (> content high))
-        (put-text-property cb ce 'font-lock-face 'font-lock-warning-face))
+        (put-text-property cb ce 'face 'font-lock-warning-face))
       (when (if reverse (> content high) (< content low))
-        (put-text-property cb ce 'font-lock-face 'font-lock-keyword-face)))))
+        (put-text-property cb ce 'face 'font-lock-keyword-face)))))
 
 (defun stocklist--fontify-payout (cb ce content)
   "Fontify the payout cell."
@@ -398,13 +398,13 @@ MORE-OR-LESS is one of '< or '>."
           ((&plist :beg beg :end end :content content) (stocklist-get-cell column)))
     (if (funcall more-or-less (string-to-number content) (nth 2 sig))
         (progn
-          (font-lock-prepend-text-property beg end 'font-lock-face 'stocklist-signal-cell)
+          (font-lock-prepend-text-property beg end 'face 'stocklist-signal-cell)
           (add-text-properties
            beg end `(help-echo ,(format "%s is %s than %.2f"
                                         column
                                         (if (eq '< more-or-less) "less" "more")
                                         (nth 2 sig)))))
-      (font-lock-prepend-text-property beg end 'font-lock-face 'stocklist-watched-cell)
+      (font-lock-prepend-text-property beg end 'face 'stocklist-watched-cell)
       (add-text-properties
        beg end `(help-echo ,(format "%s should be %s than %.2f"
                                     column
@@ -426,10 +426,8 @@ MORE-OR-LESS is one of '< or '>."
 (defun stocklist--fontify ()
   "Fontify the buffer using stocklist rules."
   (setq-local font-lock-keywords nil)
-  (font-lock-mode -1)
-  (font-lock-mode 1)
   (variable-pitch-mode -1)
-  (put-text-property (point-min) (point-max) 'font-lock-face 'org-table)
+  (put-text-property (point-min) (point-max) 'face 'org-table)
   (stocklist-run-column-fontifiers stocklist-column-fontifiers)
   (stocklist-with-column "Symbol"
     (lambda (_ _ symbol)
@@ -439,7 +437,7 @@ MORE-OR-LESS is one of '< or '>."
           (font-lock-prepend-text-property
            (line-beginning-position)
            (line-end-position)
-           'font-lock-face face))
+           'face face))
         (when signals
           (stocklist--fontify-signals signals))))))
 
@@ -578,7 +576,8 @@ Optional argument INITIAL specifies initial content."
 
 (define-derived-mode stocklist-mode org-mode "Stocklist"
   "Stocklist mode."
-  (use-local-map stocklist-mode-map))
+  (use-local-map stocklist-mode-map)
+  (font-lock-mode -1))
 
 (provide 'stocklist)
 ;;; stocklist.el ends here
