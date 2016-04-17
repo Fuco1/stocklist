@@ -45,7 +45,7 @@
   "Stocklist columns"
   :tag "Column"
   :type '(choice
-           (const :tag "Bid" bid)
+           (const :tag "Close" close)
            (const :tag "Ask" ask)
            (const :tag "PE" pe)
            (const :tag "Yield" yield)
@@ -137,7 +137,7 @@ Examples:
 ;; p - last close
 ;; g - day low
 ;; h - day high
-(defcustom stocklist-query-code-yahoo "nsbarde"
+(defcustom stocklist-query-code-yahoo "nsparde"
   "Query code for Yahoo API."
   :type 'string
   :group 'stocklist)
@@ -233,7 +233,7 @@ Historical data is cached."
           rows)))))
 
 ;; TODO: add alerts on the values
-(cl-defstruct stocklist-instrument name symbol bid ask pe yield dps eps payout)
+(cl-defstruct stocklist-instrument name symbol close ask pe yield dps eps payout)
 
 (defun stocklist-parse-data-yahoo (data)
   "Parse the raw DATA into elisp datastuctures."
@@ -244,7 +244,7 @@ Historical data is cached."
        (make-stocklist-instrument
         :name (nth 0 items)
         :symbol (nth 1 items)
-        :bid (nth 2 items)
+        :close (nth 2 items)
         :ask (nth 3 items)
         :pe (nth 4 items)
         :yield (let ((div (string-to-number (nth 5 items))))
@@ -498,7 +498,7 @@ Numbers are already parsed and saved as numbers."
             (make-stocklist-instrument
              :name (nth 0 items)
              :symbol (nth 1 items)
-             :bid (let ((v (nth 2 items)))
+             :close (let ((v (nth 2 items)))
                     (if (equal v "N/A") nil (string-to-number v)))
              :ask (let ((v (nth 3 items)))
                     (if (equal v "N/A") nil (string-to-number v)))
