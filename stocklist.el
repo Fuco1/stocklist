@@ -26,6 +26,12 @@
 
 ;; http://www.jarloo.com/yahoo_finance/
 
+;;; TODO:
+;; - Store portfolio info in an org file
+;; - Add custom columns to the show view (or at least: avg
+;;   price/yoc/total return/total return on reinvest [is this
+;;   viable?])
+
 ;;; Code:
 
 (require 'async)
@@ -232,7 +238,8 @@ Historical data is cached."
           (insert (format "%S" rows))
           rows)))))
 
-;; TODO: add alerts on the values
+;; TODO: this is too inflexible.  We should create our own data
+;; structure where we can hold primary and derived attributes
 (cl-defstruct stocklist-instrument name symbol close ask pe yield dps eps payout)
 
 (defun stocklist-parse-data-yahoo (data)
@@ -288,6 +295,8 @@ function `stocklist-instruments'."
          (export-buffer (stocklist-export-to-org-table processed-data)))
     export-buffer))
 
+;; TODO: these helpers are probably not even needed anymore.  We
+;; should not parse the table to extract info
 ;; TODO: extract to a general "org" helper package
 (defun stocklist-goto-cell-beginning ()
   "Move point to the first non-whitespace char in current cell."
@@ -346,7 +355,6 @@ current row."
                   (not (eobp)))
         (org-table-goto-column cc)
         (-let* (((_ (&plist :contents-begin cb :contents-end ce)) (org-element-table-cell-parser))
-                ;; TODO: don't pass number right away?
                 (content (buffer-substring-no-properties cb ce)))
           (funcall fn cb ce content))))))
 
@@ -542,7 +550,6 @@ Optional argument INITIAL specifies initial content."
                           initial keymap nil nil initial)))
 
 ;; TODO: pass the environment automagically
-;; TODO: pass the current stocklist state and restore if we are reverting
 (defun stocklist-show (&optional query)
   "Show formatted data for tracked stocks."
   (interactive
@@ -591,7 +598,6 @@ Optional argument INITIAL specifies initial content."
     (forward-line (1- row))
     (org-table-goto-column col)))
 
-;; TODO: add persistent ordering between reloads
 (defvar stocklist-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map org-mode-map)
