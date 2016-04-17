@@ -21,15 +21,15 @@
   (it "should render data as org table"
     (let ((data
            (list
-            (make-stocklist-instrument :name "foo corp" :symbol "foo" :bid "1.0" :ask "1.1" :pe "10" :yield "4.5" :dps "2.2" :eps "2.2" :payout "0.22")
-            (make-stocklist-instrument :name "bar inc" :symbol "bar" :bid "10.0" :ask "10.10" :pe "11" :yield "4.2" :dps "2.1" :eps "2.0" :payout "0.99"))))
+            (make-stocklist-instrument :name "foo corp" :symbol "foo" :close "1.0" :ask "1.1" :pe "10" :yield "4.5" :dps "2.2" :eps "2.2" :payout "0.22")
+            (make-stocklist-instrument :name "bar inc" :symbol "bar" :close "10.0" :ask "10.10" :pe "11" :yield "4.2" :dps "2.1" :eps "2.0" :payout "0.99"))))
       (with-current-buffer (stocklist-export-to-org-table data)
         (expect
          (buffer-substring-no-properties (point-min) (point-max)) :to-equal
-         "| Name     | Symbol |  Bid |   Ask | Pe | Yield | Dps | Eps | Payout |
-|----------+--------+------+-------+----+-------+-----+-----+--------|
-| foo corp | foo    |  1.0 |   1.1 | 10 |   4.5 | 2.2 | 2.2 |   0.22 |
-| bar inc  | bar    | 10.0 | 10.10 | 11 |   4.2 | 2.1 | 2.0 |   0.99 |
+         "| Name     | Symbol | Close |   Ask | Pe | Yield | Dps | Eps | Payout |
+|----------+--------+-------+-------+----+-------+-----+-----+--------|
+| foo corp | foo    |   1.0 |   1.1 | 10 |   4.5 | 2.2 | 2.2 |   0.22 |
+| bar inc  | bar    |  10.0 | 10.10 | 11 |   4.2 | 2.1 | 2.0 |   0.99 |
 ")))))
 
 (defmacro with-test-buffer (initial &rest forms)
