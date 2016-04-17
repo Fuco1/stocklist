@@ -45,13 +45,13 @@
   "Stocklist columns"
   :tag "Column"
   :type '(choice
-           (const :tag "Close" close)
-           (const :tag "Ask" ask)
-           (const :tag "PE" pe)
-           (const :tag "Yield" yield)
-           (const :tag "DPS" dps)
-           (const :tag "EPS" eps)
-           (const :tag "Payout" payout)))
+          (const :tag "Close" close)
+          (const :tag "Ask" ask)
+          (const :tag "PE" pe)
+          (const :tag "Yield" yield)
+          (const :tag "DPS" dps)
+          (const :tag "EPS" eps)
+          (const :tag "Payout" payout)))
 
 (define-widget 'stocklist-signal 'lazy
   "Stocklist signal"
