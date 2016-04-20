@@ -384,6 +384,16 @@ current row."
   "Fontify the pe cell."
   (funcall (stocklist-fontify-numeric-cell 25 0.001) cb ce content))
 
+(defun stocklist--fontify-ask (cb ce content)
+  "Fontify the ask cell.
+
+If ask > close, color green, otherwise red."
+  (let ((close (stocklist-get :close))
+        (ask (stocklist-get :ask)))
+    (if (> ask close)
+        (put-text-property cb ce 'face 'font-lock-keyword-face)
+      (put-text-property cb ce 'face 'font-lock-warning-face))))
+
 (defun stocklist-run-column-fontifiers (list)
   "Run all the fontifiers in LIST.
 
