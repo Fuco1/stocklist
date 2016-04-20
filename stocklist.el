@@ -618,7 +618,8 @@ Optional argument INITIAL specifies initial content."
 (define-derived-mode stocklist-mode org-mode "Stocklist"
   "Stocklist mode."
   (use-local-map stocklist-mode-map)
-  (font-lock-mode -1))
+  (font-lock-mode -1)
+  (text-scale-adjust (- text-scale-mode-step)))
 
 (provide 'stocklist)
 ;;; stocklist.el ends here
