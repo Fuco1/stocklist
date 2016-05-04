@@ -406,6 +406,19 @@ only."
     (-lambda ((col . fontifier))
       (stocklist-with-column col fontifier))))
 
+(defun stocklist--eldoc-function ()
+  "Display information about current instrument in the minibuffer."
+  (-when-let (symbol (ignore-errors (stocklist-get :symbol)))
+    (-let (((&alist symbol (&keys :tags tags)) stocklist-instruments)
+           (echo (get-text-property (point) 'help-echo)))
+      (mapconcat
+       'identity
+       (-non-nil
+        (list
+         (when tags (concat "Tags: " (mapconcat 'identity tags ", ")))
+         echo))
+       " | "))))
+
 (defun stocklist--add-help-echo (beg end sig verb)
   "Add help echo on watched/signal fields.
 
@@ -615,10 +628,17 @@ Optional argument INITIAL specifies initial content."
     (define-key map "s" 'org-table-sort-lines)
     map))
 
+(defun stocklist-eldoc-load ()
+  "Set up org-eldoc documentation function."
+  (interactive)
+  (setq-local eldoc-documentation-function 'stocklist--eldoc-function))
+
 (define-derived-mode stocklist-mode org-mode "Stocklist"
   "Stocklist mode."
   (use-local-map stocklist-mode-map)
   (font-lock-mode -1)
+  (add-hook 'stocklist-mode-hook 'stocklist-eldoc-load t t)
+  (eldoc-mode 1)
   (text-scale-adjust (- text-scale-mode-step)))
 
 (provide 'stocklist)
